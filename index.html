@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Môi giới BĐS - CUY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .contract-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+        }
+        .contract-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .pill {
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            stroke-dasharray: 100 100;
+            transition: stroke-dashoffset 0.35s;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .action-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .action-modal.active {
+            display: flex;
+        }
+        .modal-content {
+            animation: modalFadeIn 0.3s ease;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .signature-pad {
+            border: 1px dashed #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Role Selector Modal -->
+    <div id="role-modal" class="action-modal active">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Chọn vai trò của bạn</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="selectRole('buyer')" class="px-6 py-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center border border-blue-200">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-4">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-medium text-gray-800">Người mua</h3>
+                        <p class="text-sm text-gray-500">ID: Y102</p>
+                    </div>
+                </button>
+                
+                <button onclick="selectRole('seller')" class="px-6 py-4 bg-green-50 hover:bg-green-100 rounded-lg flex items-center justify-center border border-green-200">
+                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-4">
+                        <i class="fas fa-user-tie text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-medium text-gray-800">Người bán</h3>
+                        <p class="text-sm text-gray-500">ID: X101</p>
+                    </div>
+                </button>
+                
+                <button onclick="selectRole('broker')" class="px-6 py-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg flex items-center justify-center border border-yellow-200">
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-4">
+                        <i class="fas fa-handshake text-xl"></i>
+                    </div>
+                    <div class="text-left">
+                        <h3 class="font-medium text-gray-800">Môi giới</h3>
+                        <p class="text-sm text-gray-500">ID: Z103</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden until role is selected) -->
+    <div id="main-content" class="hidden">
+        <!-- Role Indicator -->
+        <div class="bg-white shadow-sm py-2 px-4">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center">
+                    <span id="current-role-icon" class="mr-2"></span>
+                    <span id="current-role" class="font-medium"></span>
+                    <span id="current-role-id" class="text-sm text-gray-500 ml-2"></span>
+                </div>
+                <button onclick="showRoleModal()" class="text-sm text-blue-600 hover:underline flex items-center">
+                    <i class="fas fa-sync-alt mr-1"></i> Đổi vai trò
+                </button>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-8 max-w-7xl">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">Hợp đồng #CUY-20230825-0001</h1>
+                    <p class="text-gray-600">Môi giới: <span class="font-medium">Trần C (ID: Z103)</span></p>
+                </div>
+                <div class="flex space-x-4">
+                    <button class="px-4 py-2 bg-white border border-gray-300 rounded-lg flex items-center text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-print mr-2"></i> In HĐ
+                    </button>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center hover:bg-blue-700">
+                        <i class="fas fa-paper-plane mr-2"></i> Gửi xác nhận
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Timeline -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Tiến trình hợp đồng</h2>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span>Còn lại: <span class="font-medium text-blue-600">5 ngày</span></span>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <!-- Progress line -->
+                    <div class="absolute left-4 top-4 h-2 bg-gray-200 w-[calc(100%-32px)]"></div>
+                    
+                    <div class="relative z-10 flex justify-between">
+                        <!-- Step 1 -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white mb-2">
+                                <i class="fas fa-check text-sm"></i>
+                            </div>
+                            <p class="text-xs font-medium text-gray-700">Khởi tạo</p>
+                            <p class="text-xs text-gray-500">25/08</p>
+                        </div>
+                        
+                        <!-- Step 2 -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white mb-2">
+                                <i class="fas fa-check text-sm"></i>
+                            </div>
+                            <p class="text-xs font-medium text-gray-700">Xác nhận TT</p>
+                            <p class="text-xs text-gray-500">26/08</p>
+                        </div>
+                        
+                        <!-- Step 3 -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-blue-600 flex items-center justify-center text-blue-600 mb-2">
+                                <span class="text-xs font-bold">3</span>
+                            </div>
+                            <p class="text-xs font-medium text-gray-700">Đặt cọc</p>
+                            <p class="text-xs text-gray-500">Đang xử lý</p>
+                        </div>
+                        
+                        <!-- Step 4 -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-gray-100 border-2 border-gray-300 flex items-center justify-center text-gray-400 mb-2">
+                                <span class="text-xs font-bold">4</span>
+                            </div>
+                            <p class="text-xs font-medium text-gray-400">Hoàn tất</p>
+                            <p class="text-xs text-gray-400">--/--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Left Sidebar -->
+                <div class="lg:col-span-1 space-y-4">
+                    <!-- Contract Summary -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="font-medium text-gray-800 mb-4">Tóm tắt hợp đồng</h3>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-500">Giá trị cọc:</span>
+                                <span class="text-sm font-medium">10,000,000₫</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-500">Hoa hồng:</span>
+                                <span class="text-sm font-medium">2,000,000₫</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-500">Ngày tạo:</span>
+                                <span class="text-sm font-medium">25/08/2023</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-sm text-gray-500">Hạn xử lý:</span>
+                                <span class="text-sm font-medium text-blue-600">30/08/2023</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-4 border-t border-gray-100">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium">Tiến độ:</span>
+                                <span class="text-xs font-medium text-blue-600">60%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Parties Involved -->
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="font-medium text-gray-800 mb-4">Các bên liên quan</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- Seller -->
+                            <div class="flex items-start space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Nguyễn A</p>
+                                    <p class="text-xs text-gray-500">Người bán (ID: X101)</p>
+                                    <div class="flex items-center mt-1">
+                                        <span class="pill bg-green-100 text-green-800">Đã xác nhận</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Buyer -->
+                            <div class="flex items-start space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Ngô B</p>
+                                    <p class="text-xs text-gray-500">Người mua (ID: Y102)</p>
+                                    <div class="flex items-center mt-1">
+                                        <span class="pill bg-blue-100 text-blue-800">Đã xác nhận</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Broker -->
+                            <div class="flex items-start space-x-3">
+                                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Trần C</p>
+                                    <p class="text-xs text-gray-500">Môi giới (ID: Z103)</p>
+                                    <div class="flex items-center mt-1">
+                                        <span class="pill bg-yellow-100 text-yellow-800">Đang xử lý</span>
+                                        <div class="ml-2 flex items-center text-yellow-500">
+                                            <i class="fas fa-star text-xs"></i>
+                                            <span class="text-xs font-medium ml-1">8.0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Panel -->
+                    <div id="action-panel" class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="font-medium text-gray-800 mb-4">Thao tác của bạn</h3>
+                        
+                        <!-- Buyer Actions -->
+                        <div id="buyer-actions" class="space-y-3 hidden">
+                            <button onclick="showDepositModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700">
+                                <i class="fas fa-money-bill-wave mr-2"></i> Thanh toán cọc
+                            </button>
+                            <button onclick="showConfirmModal('buyer')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg flex items-center justify-center hover:bg-green-700">
+                                <i class="fas fa-check-circle mr-2"></i> Xác nhận đã cọc
+                            </button>
+                            <button onclick="showCancelModal()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg flex items-center justify-center hover:bg-red-700">
+                                <i class="fas fa-times-circle mr-2"></i> Yêu cầu hủy
+                            </button>
+                        </div>
+                        
+                        <!-- Seller Actions -->
+                        <div id="seller-actions" class="space-y-3 hidden">
+                            <button onclick="showConfirmModal('seller')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg flex items-center justify-center hover:bg-green-700">
+                                <i class="fas fa-check-circle mr-2"></i> Xác nhận nhận cọc
+                            </button>
+                            <button onclick="showCancelModal()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg flex items-center justify-center hover:bg-red-700">
+                                <i class="fas fa-times-circle mr-2"></i> Yêu cầu hủy
+                            </button>
+                        </div>
+                        
+                        <!-- Broker Actions -->
+                        <div id="broker-actions" class="space-y-3 hidden">
+                            <button onclick="showDepositRequestModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700">
+                                <i class="fas fa-hand-holding-usd mr-2"></i> Yêu cầu đặt cọc
+                            </button>
+                            <button onclick="showConfirmModal('broker')" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg flex items-center justify-center hover:bg-green-700">
+                                <i class="fas fa-check-circle mr-2"></i> Xác nhận hoàn tất
+                            </button>
+                            <button onclick="showCancelModal()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg flex items-center justify-center hover:bg-red-700">
+                                <i class="fas fa-times-circle mr-2"></i> Đề xuất hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="lg:col-span-3">
+                    <!-- Tabs Navigation -->
+                    <div class="flex border-b border-gray-200 mb-6">
+                        <button class="tab-btn px-4 py-2 font-medium text-blue-600 border-b-2 border-blue-600" data-tab="deposit">
+                            Thông tin cọc
+                        </button>
+                        <button class="tab-btn px-4 py-2 font-medium text-gray-500 hover:text-gray-700" data-tab="parties">
+                            Thông tin các bên
+                        </button>
+                        <button class="tab-btn px-4 py-2 font-medium text-gray-500 hover:text-gray-700" data-tab="cancel">
+                            Điều khoản hủy
+                        </button>
+                        <button class="tab-btn px-4 py-2 font-medium text-gray-500 hover:text-gray-700" data-tab="history">
+                            Lịch sử hoạt động
+                        </button>
+                    </div>
+                    
+                    <!-- Tab Contents -->
+                    <div>
+                        <!-- Deposit Tab -->
+                        <div id="deposit-tab" class="tab-content active">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <!-- Contract Deposit -->
+                                <div class="contract-card bg-white rounded-xl shadow-sm p-6 border-l-blue-500">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <h3 class="font-medium text-gray-800">Cọc hợp đồng</h3>
+                                        <span class="pill bg-blue-100 text-blue-800">Đang chờ</span>
+                                    </div>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500 mb-1">Giá trị cọc</p>
+                                            <p class="text-xl font-semibold">10,000,000₫</p>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p class="text-sm text-gray-500 mb-1">Thời hạn</p>
+                                                <p class="font-medium">7 ngày</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm text-gray-500 mb-1">Xử lý pending</p>
+                                                <p class="font-medium">3 ngày</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="pt-4 border-t border-gray-100">
+                                            <p class="text-sm text-gray-500 mb-2">Xác nhận thanh toán:</p>
+                                            <div class="flex justify-between">
+                                                <div class="text-center">
+                                                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mx-auto mb-1">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                    <p class="text-xs">Người bán</p>
+                                                    <button class="mt-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Yes</button>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mx-auto mb-1">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                    <p class="text-xs">Người mua</p>
+                                                    <button class="mt-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Yes</button>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mx-auto mb-1">
+                                                        <i class="fas fa-handshake"></i>
+                                                    </div>
+                                                    <p class="text-xs">Môi giới</p>
+                                                    <button class="mt-1 px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Confirm</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Commission Deposit -->
+                                <div class="contract-card bg-white rounded-xl shadow-sm p-6 border-l-yellow-500">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <h3 class="font-medium text-gray-800">Cọc hoa hồng</h3>
+                                        <span class="pill bg-gray-100 text-gray-800">Chưa bắt đầu</span>
+                                    </div>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500 mb-1">Giá trị cọc</p>
+                                            <p class="text-xl font-semibold">2,000,000₫</p>
+                                            <p class="text-xs text-gray-500 mt-1">(Chuyển từ cọc HĐ: 1,800,000₫)</p>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <p class="text-sm text-gray-500 mb-1">Thời hạn</p>
+                                                <p class="font-medium">14 ngày</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm text-gray-500 mb-1">Xử lý pending</p>
+                                                <p class="font-medium">6 ngày</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="pt-4 border-t border-gray-100">
+                                            <p class="text-sm text-gray-500 mb-2">Yêu cầu xác nhận:</p>
+                                            <div class="flex justify-between">
+                                                <div class="text-center">
+                                                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mx-auto mb-1">
+                                                        <i class="fas fa-user-tie"></i>
+                                                    </div>
+                                                    <p class="text-xs">Người bán</p>
+                                                    <button class="mt-1 px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Pending</button>
+                                                </div>
+                                                <div class="text-center">
+                                                    <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mx-auto mb-1">
+                                                        <i class="fas fa-handshake"></i>
+                                                    </div>
+                                                    <p class="text-xs">Môi giới</p>
+                                                    <button class="mt-1 px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Pending</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Actions -->
+                            <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                                <h3 class="font-medium text-gray-800 mb-4">Thao tác thanh toán</h3>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <button onclick="showDepositModal()" class="px-4 py-3 bg-blue-50 border border-blue-100 rounded-lg flex flex-col items-center text-blue-700 hover:bg-blue-100">
+                                        <i class="fas fa-file-invoice-dollar text-xl mb-2"></i>
+                                        <span class="font-medium">Thanh toán cọc HĐ</span>
+                                    </button>
+                                    
+                                    <button onclick="showTransferModal()" class="px-4 py-3 bg-green-50 border border-green-100 rounded-lg flex flex-col items-center text-green-700 hover:bg-green-100">
+                                        <i class="fas fa-hand-holding-usd text-xl mb-2"></i>
+                                        <span class="font-medium">Chuyển cọc HH</span>
+                                    </button>
+                                    
+                                    <button onclick="showAdditionalModal()" class="px-4 py-3 bg-purple-50 border border-purple-100 rounded-lg flex flex-col items-center text-purple-700 hover:bg-purple-100">
+                                        <i class="fas fa-comment-dollar text-xl mb-2"></i>
+                                        <span class="font-medium">Bổ sung cọc HH</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Parties Tab -->
+                        <div id="parties-tab" class="tab-content">
+                            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+                                <div class="grid grid-cols-1 md:grid-cols-3 divide-x divide-gray-200">
+                                    <!-- Seller Info -->
+                                    <div class="p-6">
+                                        <div class="flex items-center mb-4">
+                                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-medium">Người bán</h3>
+                                                <p class="text-xs text-gray-500">ID: X101</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-3">
+                                            <div>
+                                                <p class="text-xs text-gray-500">Họ tên</p>
+                                                <p class="text-sm font-medium">Nguyễn A</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Số ĐT</p>
+                                                <p class="text-sm font-medium">0913***456</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">CCCD</p>
+                                                <p class="text-sm font-medium">0111xxx</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Ngân hàng</p>
+                                                <p class="text-sm font-medium">Bank1 - 001xxx</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Buyer Info -->
+                                    <div class="p-6">
+                                        <div class="flex items-center mb-4">
+                                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-medium">Người mua</h3>
+                                                <p class="text-xs text-gray-500">ID: Y102</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-3">
+                                            <div>
+                                                <p class="text-xs text-gray-500">Họ tên</p>
+                                                <p class="text-sm font-medium">Ngô B</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Số ĐT</p>
+                                                <p class="text-sm font-medium">0985***789</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">CCCD</p>
+                                                <p class="text-sm font-medium">0122yyy</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Ngân hàng</p>
+                                                <p class="text-sm font-medium">Bank2 - 002yyy</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Broker Info -->
+                                    <div class="p-6">
+                                        <div class="flex items-center mb-4">
+                                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-3">
+                                                <i class="fas fa-handshake"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-medium">Môi giới</h3>
+                                                <p class="text-xs text-gray-500">ID: Z103</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-3">
+                                            <div>
+                                                <p class="text-xs text-gray-500">Họ tên</p>
+                                                <p class="text-sm font-medium">Trần C</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Số ĐT</p>
+                                                <input type="text" class="w-full border rounded px-3 py-1 text-sm" placeholder="Nhập số điện thoại">
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">CCCD</p>
+                                                <p class="text-sm font-medium">0333zzz</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500">Ngân hàng</p>
+                                                <p class="text-sm font-medium">Bank3 - 003zzz</p>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <div class="flex items-center text-yellow-500 mr-4">
+                                                    <i class="fas fa-star text-sm"></i>
+                                                    <span class="text-sm font-medium ml-1">8.0</span>
+                                                </div>
+                                                <button class="text-xs text-blue-600 hover:underline">Xem đánh giá</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Cancel Terms Tab -->
+                        <div id="cancel-tab" class="tab-content">
+                            <div class="bg-white rounded-xl shadow-sm p-6">
+                                <h3 class="font-medium text-gray-800 mb-4">Điều khoản hủy hợp đồng</h3>
+                                
+                                <div class="space-y-4">
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-gray-700 mb-2">1. Hủy trước khi đặt cọc</h4>
+                                        <p class="text-sm text-gray-600">- Bên hủy hợp đồng sẽ chịu phí 10% giá trị hợp đồng.</p>
+                                        <p class="text-sm text-gray-600">- Phí hủy sẽ được chia đều giữa các bên còn lại.</p>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-gray-700 mb-2">2. Hủy sau khi đặt cọc</h4>
+                                        <p class="text-sm text-gray-600">- Bên hủy hợp đồng sẽ mất toàn bộ số tiền đã đặt cọc.</p>
+                                        <p class="text-sm text-gray-600">- Số tiền cọc sẽ được chia đều giữa các bên còn lại.</p>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg p-4">
+                                        <h4 class="font-medium text-gray-700 mb-2">3. Hủy do vi phạm điều khoản</h4>
+                                        <p class="text-sm text-gray-600">- Bên vi phạm sẽ mất toàn bộ quyền lợi theo hợp đồng.</p>
+                                        <p class="text-sm text-gray-600">- Bên vi phạm có thể bị phạt thêm tùy theo mức độ vi phạm.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity History Tab -->
+                        <div id="history-tab" class="tab-content">
+                            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                                <div class="divide-y divide-gray-200">
+                                    <!-- Activity Item -->
+                                    <div class="p-4">
+                                        <div class="flex items-start">
+                                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                                                <i class="fas fa-file-signature text-sm"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between">
+                                                    <p class="font-medium">Khởi tạo hợp đồng</p>
+                                                    <span class="text-xs text-gray-500">25/08/2023 09:30</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">Hợp đồng được tạo bởi môi giới Trần C (ID: Z103)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Activity Item -->
+                                    <div class="p-4">
+                                        <div class="flex items-start">
+                                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3">
+                                                <i class="fas fa-check-circle text-sm"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between">
+                                                    <p class="font-medium">Xác nhận thông tin</p>
+                                                    <span class="text-xs text-gray-500">26/08/2023 14:15</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">Người bán Nguyễn A đã xác nhận thông tin hợp đồng</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Activity Item -->
+                                    <div class="p-4">
+                                        <div class="flex items-start">
+                                            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-3">
+                                                <i class="fas fa-check-circle text-sm"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between">
+                                                    <p class="font-medium">Xác nhận thông tin</p>
+                                                    <span class="text-xs text-gray-500">26/08/2023 16:45</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">Người mua Ngô B đã xác nhận thông tin hợp đồng</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Activity Item -->
+                                    <div class="p-4">
+                                        <div class="flex items-start">
+                                            <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-3">
+                                                <i class="fas fa-money-bill-wave text-sm"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between">
+                                                    <p class="font-medium">Yêu cầu đặt cọc</p>
+                                                    <span class="text-xs text-gray-500">27/08/2023 10:20</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">Môi giới đã gửi yêu cầu đặt cọc 10,000,000₫</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Modals -->
+    <!-- Deposit Modal -->
+    <div id="deposit-modal" class="action-modal">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Thanh toán cọc hợp đồng</h2>
+                <button onclick="hideModal('deposit-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Số tiền cọc</label>
+                    <div class="relative">
+                        <input type="text" class="w-full border rounded-lg px-4 py-2 pl-10" value="10,000,000₫" disabled>
+                        <div class="absolute left-3 top-2.5 text-gray-500">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phương thức thanh toán</label>
+                    <select class="w-full border rounded-lg px-4 py-2">
+                        <option>Chuyển khoản ngân hàng</option>
+                        <option>Ví điện tử</option>
+                        <option>Tiền mặt</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Thông tin ngân hàng người nhận</label>
+                    <div class="border rounded-lg p-3 bg-gray-50">
+                        <p class="text-sm"><span class="font-medium">Ngân hàng:</span> Bank1</p>
+                        <p class="text-sm"><span class="font-medium">Số tài khoản:</span> 001xxx</p>
+                        <p class="text-sm"><span class="font-medium">Chủ tài khoản:</span> Nguyễn A</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mã giao dịch/ảnh chụp</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-500">Kéo thả ảnh chụp biên lai vào đây hoặc click để chọn</p>
+                        <input type="file" class="hidden">
+                    </div>
+                </div>
+                
+                <div class="pt-4">
+                    <button class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-check-circle mr-2"></i> Xác nhận thanh toán
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="action-modal">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Xác nhận thanh toán cọc</h2>
+                <button onclick="hideModal('confirm-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div id="confirm-message" class="text-gray-600">
+                    <!-- Message will be dynamically inserted here -->
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Chữ ký điện tử</label>
+                    <div class="signature-pad rounded-lg w-full h-32 mb-2"></div>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <button class="text-blue-600 hover:underline">Xóa chữ ký</button>
+                        <span>Ký vào khung trên để xác nhận</span>
+                    </div>
+                </div>
+                
+                <div class="pt-4 flex space-x-3">
+                    <button onclick="hideModal('confirm-modal')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                        Hủy bỏ
+                    </button>
+                    <button class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        <i class="fas fa-check-circle mr-2"></i> Xác nhận
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Request Modal -->
+    <div id="cancel-modal" class="action-modal">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Yêu cầu hủy hợp đồng</h2>
+                <button onclick="hideModal('cancel-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Lý do hủy</label>
+                    <select class="w-full border rounded-lg px-4 py-2">
+                        <option>Không thống nhất về giá</option>
+                        <option>Thay đổi nhu cầu</option>
+                        <option>Không hài lòng về sản phẩm</option>
+                        <option>Lý do khác</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mô tả chi tiết</label>
+                    <textarea class="w-full border rounded-lg px-4 py-2 h-24" placeholder="Nhập mô tả chi tiết lý do hủy hợp đồng..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tài liệu đính kèm (nếu có)</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-500">Kéo thả tài liệu vào đây hoặc click để chọn</p>
+                        <input type="file" class="hidden">
+                    </div>
+                </div>
+                
+                <div class="pt-4 flex space-x-3">
+                    <button onclick="hideModal('cancel-modal')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                        Hủy bỏ
+                    </button>
+                    <button class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <i class="fas fa-times-circle mr-2"></i> Gửi yêu cầu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deposit Request Modal (for broker) -->
+    <div id="deposit-request-modal" class="action-modal">
+        <div class="modal-content bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Yêu cầu đặt cọc</h2>
+                <button onclick="hideModal('deposit-request-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Số tiền cọc</label>
+                    <div class="relative">
+                        <input type="text" class="w-full border rounded-lg px-4 py-2 pl-10" placeholder="Nhập số tiền">
+                        <div class="absolute left-3 top-2.5 text-gray-500">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Thời hạn thanh toán</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <select class="border rounded-lg px-4 py-2">
+                            <option>7 ngày</option>
+                            <option>5 ngày</option>
+                            <option>3 ngày</option>
+                        </select>
+                        <select class="border rounded-lg px-4 py-2">
+                            <option>Giờ hành chính</option>
+                            <option>Bất kỳ</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Thông tin ngân hàng nhận cọc</label>
+                    <select class="w-full border rounded-lg px-4 py-2 mb-2">
+                        <option>Ngân hàng người bán</option>
+                        <option>Ngân hàng môi giới</option>
+                        <option>Ngân hàng bên thứ 3</option>
+                    </select>
+                    <div class="border rounded-lg p-3 bg-gray-50">
+                        <p class="text-sm"><span class="font-medium">Ngân hàng:</span> Bank1</p>
+                        <p class="text-sm"><span class="font-medium">Số tài khoản:</span> 001xxx</p>
+                        <p class="text-sm"><span class="font-medium">Chủ tài khoản:</span> Nguyễn A</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ghi chú cho các bên</label>
+                    <textarea class="w-full border rounded-lg px-4 py-2 h-20" placeholder="Nhập ghi chú cho người mua và người bán..."></textarea>
+                </div>
+                
+                <div class="pt-4 flex space-x-3">
+                    <button onclick="hideModal('deposit-request-modal')" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                        Hủy bỏ
+                    </button>
+                    <button class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-paper-plane mr-2"></i> Gửi yêu cầu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Current role variable
+        let currentRole = '';
+        
+        // Role selection functions
+        function selectRole(role) {
+            currentRole = role;
+            document.getElementById('role-modal').classList.remove('active');
+            document.getElementById('main-content').classList.remove('hidden');
+            
+            // Update role indicator
+            const roleNames = {
+                'buyer': 'Người mua',
+                'seller': 'Người bán',
+                'broker': 'Môi giới'
+            };
+            
+            const roleIcons = {
+                'buyer': '<div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="fas fa-user text-sm"></i></div>',
+                'seller': '<div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="fas fa-user-tie text-sm"></i></div>',
+                'broker': '<div class="w-6 h-6 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600"><i class="fas fa-handshake text-sm"></i></div>'
+            };
+            
+            const roleIds = {
+                'buyer': 'Y102',
+                'seller': 'X101',
+                'broker': 'Z103'
+            };
+            
+            document.getElementById('current-role').textContent = roleNames[role];
+            document.getElementById('current-role-icon').innerHTML = roleIcons[role];
+            document.getElementById('current-role-id').textContent = `ID: ${roleIds[role]}`;
+            
+            // Show appropriate actions
+            document.querySelectorAll('[id$="-actions"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${role}-actions`).classList.remove('hidden');
+        }
+        
+        function showRoleModal() {
+            document.getElementById('role-modal').classList.add('active');
+        }
+        
+        // Modal control functions
+        function showDepositModal() {
+            document.getElementById('deposit-modal').classList.add('active');
+        }
+        
+        function showConfirmModal(role) {
+            const messages = {
+                'buyer': 'Bạn xác nhận đã thanh toán số tiền cọc 10,000,000₫ cho hợp đồng này?',
+                'seller': 'Bạn xác nhận đã nhận được số tiền cọc 10,000,000₫ từ người mua?',
+                'broker': 'Bạn xác nhận đã kiểm tra và xác nhận thanh toán cọc hợp đồng này?'
+            };
+            
+            document.getElementById('confirm-message').textContent = messages[role];
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+        
+        function showCancelModal() {
+            document.getElementById('cancel-modal').classList.add('active');
+        }
+        
+        function showDepositRequestModal() {
+            document.getElementById('deposit-request-modal').classList.add('active');
+        }
+        
+        function showTransferModal() {
+            alert('Chức năng chuyển cọc hoa hồng sẽ được thực hiện sau khi cọc hợp đồng được xác nhận.');
+        }
+        
+        function showAdditionalModal() {
+            alert('Chức năng bổ sung cọc hoa hồng sẽ được thực hiện sau khi cọc hợp đồng được xác nhận.');
+        }
+        
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons and tabs
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('text-blue-600', 'border-blue-600');
+                    btn.classList.add('text-gray-500');
+                });
+                
+                // Add active class to clicked button
+                this.classList.remove('text-gray-500');
+                this.classList.add('text-blue-600', 'border-blue-600');
+                
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Show the selected tab
+                const tabId = this.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('vi-VN');
+            const dateString = now.toLocaleDateString('vi-VN');
+            document.getElementById('current-time').textContent = `${timeString} ${dateString}`;
+        }
+        
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
